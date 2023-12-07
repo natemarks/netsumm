@@ -41,7 +41,7 @@ func DNSLookupWithServer(localIP, server, queryHost string, mainLog *zerolog.Log
 		StartTime:   time.Now(),
 	}
 	resolver := &net.Resolver{
-		PreferGo: true,
+		PreferGo: false,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 			return net.Dial(network, fmt.Sprintf("%s:53", server))
 		},
