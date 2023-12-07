@@ -47,12 +47,12 @@ func DNSLookupWithServer(localIP, server, queryHost string, mainLog *zerolog.Log
 		},
 	}
 
-	_, err := resolver.LookupIPAddr(context.Background(), queryHost)
+	result, err := resolver.LookupIPAddr(context.Background(), queryHost)
 	if err != nil {
 		log.Error().Err(err).Msg("dns lookup error")
 	} else {
 
-		log.Info().Msgf("dns lookup successful")
+		log.Info().Msgf("dns lookup successful: %v", result)
 	}
 	poll.EndTime = time.Now()
 	return poll
