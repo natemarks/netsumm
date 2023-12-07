@@ -9,7 +9,7 @@ COMMIT := $(shell git rev-parse HEAD)
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/)
 CDIR = $(shell pwd)
-EXECUTABLES := netsumm
+EXECUTABLES := netsumm netsimple
 GOOS := linux
 GOARCH := amd64
 

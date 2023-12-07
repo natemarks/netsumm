@@ -26,6 +26,12 @@ func getPoller(localIP string, target config.Target, mainLog *zerolog.Logger) in
 			RemoteIP: target.Destination,
 			Port:     target.Data,
 		}
+	case "Ping":
+		return internal.Ping{
+			LocalIP: localIP,
+			Server:  target.Destination,
+			Timeout: target.Data,
+		}
 	default:
 		panic(fmt.Errorf("unknown target type: %s", target.Type))
 	}
