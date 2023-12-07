@@ -1,5 +1,5 @@
 # netsumm
-
+readsa json file and runs a series of network tests. save the output during normal operations as a baseline
 ```bash
 echo '{
 "targets": [
