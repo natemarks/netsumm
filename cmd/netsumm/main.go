@@ -2,13 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"sync"
+
+	"github.com/natemarks/netsumm/version"
 
 	"github.com/natemarks/netsumm/config"
 	"github.com/natemarks/netsumm/internal"
+	"github.com/rs/zerolog"
 )
 
-func getPoller(localIP string, target config.Target) internal.Remote {
+func getPoller(localIP string, target config.Target, mainLog *zerolog.Logger) internal.Remote {
 	switch target.Type {
 	case "DNS Lookup":
 		return internal.DNSLookup{
@@ -27,16 +31,21 @@ func getPoller(localIP string, target config.Target) internal.Remote {
 	}
 }
 
-func worker(config config.Config, target config.Target, wg *sync.WaitGroup, ch chan<- internal.PollSet) {
+func worker(config config.Config, target config.Target, wg *sync.WaitGroup, ch chan<- internal.PollSet, mainLog *zerolog.Logger) {
 	defer wg.Done()
 
-	remote := getPoller(config.Source, target)
-	result := remote.Measure(config.Iterations)
+	remote := getPoller(config.Source, target, mainLog)
+	result := remote.Measure(config.Iterations, mainLog)
 	ch <- result
 }
 
 func main() {
 	config := config.GetConfigFromFile()
+	hostname, _ := os.Hostname()
+	config.Source = hostname
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	logger := zerolog.New(os.Stderr).With().Str("version", version.Version).Timestamp().Logger()
+
 	// Create a channel for CustomStruct
 	ch := make(chan internal.PollSet)
 
@@ -45,7 +54,7 @@ func main() {
 
 	for _, target := range config.Targets {
 		wg.Add(1)
-		go worker(config, target, &wg, ch)
+		go worker(config, target, &wg, ch, &logger)
 	}
 
 	// Start a goroutine to close the channel after all workers are done

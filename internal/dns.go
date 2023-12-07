@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 // DNSLookup is a struct that contains information about a DNS lookup
@@ -15,18 +17,23 @@ type DNSLookup struct {
 }
 
 // Measure performs a DNS lookup test for the given hostname
-func (d DNSLookup) Measure(iterations int) PollSet {
+func (d DNSLookup) Measure(iterations int, mainLog *zerolog.Logger) PollSet {
 	var result PollSet
 	for i := 1; i <= iterations; i++ {
-		result = append(result, PerformDNSLookup(d.LocalIP, d.Server, d.QueryHost))
+		result = append(result, DNSLookupWithServer(d.LocalIP, d.Server, d.QueryHost, mainLog))
 		time.Sleep(1 * time.Second)
 	}
 	return result
 }
 
-// PerformDNSLookup performs a DNS lookup for the given hostname
-func PerformDNSLookup(localIP, server, queryHost string) Poll {
+// DNSLookupWithServer performs a DNS lookup test for the given hostname
+func DNSLookupWithServer(localIP, server, queryHost string, mainLog *zerolog.Logger) Poll {
 
+	log := LoggerWithMapFields(mainLog, map[string]interface{}{
+		"source":      localIP,
+		"destination": server,
+		"queryHost":   queryHost,
+	})
 	var poll = Poll{
 		Type:        "DNS Lookup",
 		Source:      localIP,
@@ -40,7 +47,13 @@ func PerformDNSLookup(localIP, server, queryHost string) Poll {
 		},
 	}
 
-	resolver.LookupIPAddr(context.Background(), queryHost)
+	_, err := resolver.LookupIPAddr(context.Background(), queryHost)
+	if err != nil {
+		log.Error().Err(err).Msg("dns lookup error")
+	} else {
+
+		log.Info().Msgf("dns lookup successful")
+	}
 	poll.EndTime = time.Now()
 	return poll
 }

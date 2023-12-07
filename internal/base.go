@@ -1,24 +1,19 @@
 package internal
 
 import (
-	"log"
-	"net"
+	"github.com/rs/zerolog"
 )
-
-// GetSourceIP returns the IP address of the source
-func GetSourceIP() string {
-	conn, err := net.Dial("udp", "8.8.8.8:53")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP.String()
-}
 
 // Remote is an interface for a remote poller
 type Remote interface {
-	Measure(iterations int) PollSet
+	Measure(iterations int, mainLog *zerolog.Logger) PollSet
+}
+
+// LoggerWithMapFields adds fields to a logger
+func LoggerWithMapFields(mainLog *zerolog.Logger, fields map[string]interface{}) zerolog.Logger {
+	var log zerolog.Logger = *mainLog
+	for key, value := range fields {
+		log = log.With().Interface(key, value).Logger()
+	}
+	return log
 }
